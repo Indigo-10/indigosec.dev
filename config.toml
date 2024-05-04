@@ -3,6 +3,18 @@
     extended = true
     min = "0.55.0"
 
+[menu]
+  [[menu.main]]
+    identifier = "home"
+    name = "Home"
+    url = "/"
+    weight = 1
+  [[menu.main]]
+    identifier = "about"
+    name = "About"
+    url = "/about/"
+    weight = 2
+
 [params]
   author = "Jonathan Skeete"
   description = "Penn State University Red Team Captain"
