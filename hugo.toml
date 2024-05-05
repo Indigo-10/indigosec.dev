@@ -2,7 +2,7 @@ baseURL = 'https://indigosec.dev/'
 languageCode = 'en-us'
 title = 'indigo <3'
 theme = "m10c"
-contentDir = "content/posts"
+
 
 [menu]
   [[menu.main]]
