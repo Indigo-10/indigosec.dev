@@ -6,14 +6,14 @@
     <description>Recent content on indigo &lt;3</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 28 Sep 2014 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Mon, 13 May 2024 00:00:00 +0000</lastBuildDate>
     <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Creating a New Theme</title>
+      <title>about me :)</title>
       <link>http://localhost:1313/about/</link>
-      <pubDate>Sun, 28 Sep 2014 00:00:00 +0000</pubDate>
+      <pubDate>Mon, 13 May 2024 00:00:00 +0000</pubDate>
       <guid>http://localhost:1313/about/</guid>
-      <description>Introduction This tutorial will show you how to create a simple theme in Hugo. I assume that you are familiar with HTML, the bash command line, and that you are comfortable using Markdown to format content. I&amp;rsquo;ll explain how Hugo uses templates and how you can organize your templates to create a theme. I won&amp;rsquo;t cover using CSS to style your theme.&#xA;We&amp;rsquo;ll start with creating a new site with a very basic template.</description>
+      <description>hey!!! thanks for checking this out because who even does blog posts in 2024, apparently computer nerds like myself. anyway, my name is jonathan skeete, a sophomore at penn state; however, you&amp;rsquo;ll see me go by my alias, &amp;ldquo;indigo&amp;rdquo;, practically everywhere else (music production, CTFs, usernames, etc). i&amp;rsquo;ve studied cybersecurity formally since my sophomore year of high school, and, fun fact, i&amp;rsquo;ve inconsistently and incoherently used kali since elementary school (i like to joke that i was born for this).</description>
     </item>
     <item>
       <title>(Hu)go Template Primer</title>
