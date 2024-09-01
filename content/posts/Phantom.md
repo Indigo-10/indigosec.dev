@@ -79,7 +79,7 @@ Due to the services listed, there seem to be few initial attack vectors. Here's 
 
 - Port 88: Kerberos is used for Authentication, not necessarily something I change around and exploit without access to security policies. However, what we can keep in mind are possible misconfigurations such as AESPRoasting and RID-Cycling. 
 
-![[Pasted image 20240831153727.png]]
+![[C:\Users\jonat\Documents\Obsidian Vault\Pasted image 20240831153727.png]]
 
 RID-Cycling seems to have worked and provided, a userlist, we can use this userlist to try and AESPRoast as well as try to brute force passwords. 
 
