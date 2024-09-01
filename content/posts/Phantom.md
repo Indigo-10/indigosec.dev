@@ -1,12 +1,9 @@
 ---
-date: 
+date: 2024-08-31
 tags:
+  - vulnlab
+title: "Vulnlab Walkthrough #1 - Phantom"
 ---
-
-+++
-title =  "Vulnlab Walkthrough #1 - Phantom"
-date = "2024-08-31"
-+++
 
 # High-level Overview 📜
 
