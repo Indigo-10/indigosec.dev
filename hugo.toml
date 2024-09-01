@@ -6,7 +6,7 @@ theme = "m10c"
 
 [menu]
   [[menu.main]]
-    identifier = "home"
+    identifier = "/posts"
     name = "Home"
     url = "/"
     weight = 1
@@ -15,3 +15,45 @@ theme = "m10c"
     name = "About"
     url = "/about/"
     weight = 2
+
+    [module]
+  [module.hugoVersion]
+    extended = true
+    min = "0.55.0"
+
+[params]
+  author = "Jonathan Skeete"
+  description = "Penn State University Red Team Captain"
+  menu_item_separator = " - "
+  [[params.social]]
+    icon = "discord"
+    name = "Discord"
+    url = "https://discord.com/users/xindigoo"
+  [[params.social]]
+    icon = "linkedin"
+    name = "Linkedin"
+    url = "https://www.linkedin.com/in/jonathan-skeete-06b427256/"
+
+  # Default theme
+  [params.style]
+    darkestColor = "#242930"
+    darkColor = "#353b43"
+    lightColor = "#afbac4"
+    lightestColor = "#ffffff"
+    primaryColor = "#d35050"
+
+   #Green theme
+  #[params.style]
+    #darkestColor = "#315659"
+    #darkColor = "#253031"
+    #lightColor = "#96a879"
+    #lightestColor = "#fff"
+    #primaryColor = "#d35050"
+
+  # Red theme
+  #[params.style]
+  #  darkestColor = "#d35050"
+  #  darkColor = "#212121"
+  #  lightColor = "#d6d6d6"
+  #  lightestColor = "#d3d3d3"
+  #  primaryColor = "#ffffff"
