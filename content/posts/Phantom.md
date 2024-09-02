@@ -79,34 +79,35 @@ Due to the services listed, there seem to be few initial attack vectors. Here's 
 
 - Port 88: Kerberos is used for Authentication, not necessarily something I change around and exploit without access to security policies. However, what we can keep in mind are possible misconfigurations such as AESPRoasting and RID-Cycling. 
 
-![[C:\Users\jonat\Documents\Obsidian Vault\Pasted image 20240831153727.png]]
+![RID-Cycling](/RID.png)
+
 
 RID-Cycling seems to have worked and provided, a userlist, we can use this userlist to try and AESPRoast as well as try to brute force passwords. 
 
-![[Pasted image 20240831154415.png]]
+![AESPRoast](/ASREP.png)
 
 Unfortunately, AESPRoasting doesn't work due to UF_DONT_REQUIRE_PREAUTH not being enabled on user accounts, which would allow for me to grab the a Kerberos TGT  for the account without requiring a password, which in turn would allow for me to crack the hash and obtain a password. 
 
 
 - Port 135/593: MSRPC is usually a dead end unless we have creds. Querying the endpoint shows a print system protocol is being used, potentially making it vulnerable to print nightmare. However further enumeration reveals nothing.
 
-![[Pasted image 20240831152408.png]]
+![MSRPC](/MSRPC.png)
 
 - Port 139/445: Me and my homies love SMB. It's usually the most exploited service to gain initial access due to security misconfigurations and can usually be used in conjunction with other services for forced authentication
 
-![[SMB.png]]
+![SMBshares](/SMB.png)
 
 As talked about, the file server allows us to authenticate with null credentials using the username Anonymous. This reveals a few network shares we can access access, most deny directory listings due to insufficient permissions; however the "public" network share holds a file called "tech_support_email.eml" which I downloaded to my local machine. Lets view its contents
 
 
-![[Screenshot 2024-07-26 153847.png]]
+![Email](/Email.png)
 
 This seems to be an onboarding message that provides initial creds, spraying that against the userlist we generated provides a hit for ibryant. Having these creds, lets see if we can access some of the shares previously inaccessible to us, more specifically, the "Departments Share."
 
-![[Screenshot 2024-07-26 155016.png]]
+![creds](/creds.png)
 
 
-![[Pasted image 20240831164034.png]]
+![smb2](/SMB2.png)
 
 ibryant does indeed have access to the "Departments share" which includes the IT, HR, and Finance departments, what interests us the most is the "IT_BACKUP_201123.hc" file under Departments share/IT. 
 
@@ -114,19 +115,19 @@ After research, it looks like an .hc file should be opened with veracrypt, a fil
 
 To be completely honest, I did not make a custom wordlist, I guessed/bruteforced the password once learning the combination should be name + year + special character, which is honestly probably the case, or something similar, in most companies.
 
-![[Pasted image 20240831184328.png]]
-![[Pasted image 20240831184648.png]]
-![[Pasted image 20240831184715.png]]
+![drive1](/drive1.png)
+![drive2](/drive2.png)
+![foothold](/foothold.png)
 
 Within the encrypted drive, theres a VyOS backup archive, meant for a virtual router, which hosts its configuration file.  Within the config, there's a VPN profile meant for user lstanley, which provides a username and password. We can do what we did previously, by using our user list to spray creds against the given password, doing that gives us access to the svc_sspr user. This technically should be our foothold, we'll save these creds for later, lets continue with enumeration of other ports.
 
-![[Screenshot 2024-08-02 112611.png]]
+![spray](/spray.png)
 
 - Port 389/3268: There's not much LDAP would provide that we haven't already gained from rid-brute. a tool like windapsearch is mostly useful for enumerating users, groups, computers, or privileged users which we already have or will get from our next phase of weaponization. 
 
 - Port 3389: We have creds we can test with RDP for svc_sspr, let see if the user is allowed to remote into the machine
 
-![[Pasted image 20240831195929.png]]
+![WinRM](/svcrm.png)
 
 Indeed we can, and this gets us our user flag. Considering we can remote into the machine, we can also run bloodhound to enumerate the environment further. Considering we enumerated to gain credentials, which we are using to find an attack path, this constitutes our second phase, weaponization.
 
@@ -134,18 +135,18 @@ Indeed we can, and this gets us our user flag. Considering we can remote into th
 
 Lets run bloodhound on the environment and see if we can find an attack path.
 
-![[Screenshot 2024-08-02 135659.png]]
+![WinRM](/collection.png)
 
-![[Pasted image 20240831202717.png]]
-![[Pasted image 20240831211630.png]]
+![Bloodhound](/bloodhound1.png)
+![Bloodhound2](/bloodhound2.png)
 
 According to bloodhound, svc_sspr has first degree object control over three users which allows the service account to change their password. All users seem to be apart of the ICT Security group, lets go check what special permissions members of this group may have.
 
 
-![[Pasted image 20240831211838.png]]
+![Bloodhound3](/bloodhound3.png)
 
 
-![[Pasted image 20240831211933.png]]
+![Bloodhound4](/bloodhound4.png)
 
 Members of the ICT Security group are allowed to modify the permissions of msDS-AllowedToActOnBehalfOfOtherIdentity on a machine account. Modifying this permission allows a machine account or user, to act on behalf of another machine account. Ultimately, we could request kerberos tickets for the machine account, impersonating the Administrator and gaining their credentials. The act of this is called resource based constrained delegation, or RBCD.
 
@@ -155,24 +156,24 @@ Given the help provided from bloodhound and some research, lets see if we can es
 
 Lets start with changing the password of `crose` and checking the MachineAccountQuota (MAQ) attribute of the account, which allows shows how many machine accounts a user can create and by default should be set to ten.
 
-![[Pasted image 20240901111557.png]]
+![MAQ](/changepsswd.png)
 
 We have successfully changed the password but since msDS-MachineAccountQuota is set to 0, we are unable to preform RBCD in the way we normally would. After googling "rbcd with maq 0" (i am the google czar), I was lead to this article from [The Hacker Recipes](https://www.thehacker.recipes/ad/movement/kerberos/delegations/rbcd) which does a great job of breaking down how both RBCD and RBCD without being able to create machine accounts work. 
 
 Here's a short breakdown.
 1. Change msDS-AllowedToActOnBehalfOfOtherIdentity property on `crose`
 
-![[Pasted image 20240901175402.png]]
+![RBCD1](/rbcd1.png)
 
 2. Request the user's TGT
 
-![[Pasted image 20240901125855.png]]
-![[Pasted image 20240901125920.png]]
+![RBCD2](/rbcd2.png)
+![RBCD3](/rbcd3.png)
 
 3. Change the users hash to the session key
 	1. This allows the user to request tickets without the KDC denying the request
 
-![[Pasted image 20240901125752.png]]
+![RBCD4](/rbcd4.png)
 
 4. Abuse S4U2Self
 	1. Service 4 User 2 Self allows `crose` to request a service ticket on behalf of the Administrator due to its msDS-AllowedToActOnBehalfOfOtherIdentity permissions over the machine and the fact that the KDC now allows `crose` to request tickets.
@@ -181,7 +182,7 @@ Here's a short breakdown.
 
 6. Get ccache and dump secrets
 
-![[Pasted image 20240901180739.png]]
+![RBCD5](/rbcd5.png)
 
 7. Profit \$\$\$
-![[Pasted image 20240901182056.png]]
+![root](/root.png)

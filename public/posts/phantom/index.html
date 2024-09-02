@@ -162,31 +162,31 @@ Host script results:
 <p>Port 88: Kerberos is used for Authentication, not necessarily something I change around and exploit without access to security policies. However, what we can keep in mind are possible misconfigurations such as AESPRoasting and RID-Cycling.</p>
 </li>
 </ul>
-<p>![[C:\Users\jonat\Documents\Obsidian Vault\Pasted image 20240831153727.png]]</p>
+<p><img src="/RID.png" alt="RID-Cycling"></p>
 <p>RID-Cycling seems to have worked and provided, a userlist, we can use this userlist to try and AESPRoast as well as try to brute force passwords.</p>
-<p>![[Pasted image 20240831154415.png]]</p>
+<p><img src="/ASREP.png" alt="AESPRoast"></p>
 <p>Unfortunately, AESPRoasting doesn&rsquo;t work due to UF_DONT_REQUIRE_PREAUTH not being enabled on user accounts, which would allow for me to grab the a Kerberos TGT  for the account without requiring a password, which in turn would allow for me to crack the hash and obtain a password.</p>
 <ul>
 <li>Port 135/593: MSRPC is usually a dead end unless we have creds. Querying the endpoint shows a print system protocol is being used, potentially making it vulnerable to print nightmare. However further enumeration reveals nothing.</li>
 </ul>
-<p>![[Pasted image 20240831152408.png]]</p>
+<p><img src="/MSRPC.png" alt="MSRPC"></p>
 <ul>
 <li>Port 139/445: Me and my homies love SMB. It&rsquo;s usually the most exploited service to gain initial access due to security misconfigurations and can usually be used in conjunction with other services for forced authentication</li>
 </ul>
-<p>![[SMB.png]]</p>
+<p><img src="/SMB.png" alt="SMBshares"></p>
 <p>As talked about, the file server allows us to authenticate with null credentials using the username Anonymous. This reveals a few network shares we can access access, most deny directory listings due to insufficient permissions; however the &ldquo;public&rdquo; network share holds a file called &ldquo;tech_support_email.eml&rdquo; which I downloaded to my local machine. Lets view its contents</p>
-<p>![[Screenshot 2024-07-26 153847.png]]</p>
+<p><img src="/Email.png" alt="Email"></p>
 <p>This seems to be an onboarding message that provides initial creds, spraying that against the userlist we generated provides a hit for ibryant. Having these creds, lets see if we can access some of the shares previously inaccessible to us, more specifically, the &ldquo;Departments Share.&rdquo;</p>
-<p>![[Screenshot 2024-07-26 155016.png]]</p>
-<p>![[Pasted image 20240831164034.png]]</p>
+<p><img src="/creds.png" alt="creds"></p>
+<p><img src="/SMB2.png" alt="smb2"></p>
 <p>ibryant does indeed have access to the &ldquo;Departments share&rdquo; which includes the IT, HR, and Finance departments, what interests us the most is the &ldquo;IT_BACKUP_201123.hc&rdquo; file under Departments share/IT.</p>
 <p>After research, it looks like an .hc file should be opened with veracrypt, a file encryption/decryption service, this would require a password to decrypt the given file. In a easier scenario, the .hc file  would be able to be cracked/decrypted using hashcat mode 13721; however, per the hint on vulnlab wiki, the hash for this file cannot be found on a regular wordlist like rockyou.txt and would take a custom wordlist.</p>
 <p>To be completely honest, I did not make a custom wordlist, I guessed/bruteforced the password once learning the combination should be name + year + special character, which is honestly probably the case, or something similar, in most companies.</p>
-<p>![[Pasted image 20240831184328.png]]
-![[Pasted image 20240831184648.png]]
-![[Pasted image 20240831184715.png]]</p>
+<p><img src="/drive1.png" alt="drive1">
+<img src="/drive2.png" alt="drive2">
+<img src="/foothold.png" alt="foothold"></p>
 <p>Within the encrypted drive, theres a VyOS backup archive, meant for a virtual router, which hosts its configuration file.  Within the config, there&rsquo;s a VPN profile meant for user lstanley, which provides a username and password. We can do what we did previously, by using our user list to spray creds against the given password, doing that gives us access to the svc_sspr user. This technically should be our foothold, we&rsquo;ll save these creds for later, lets continue with enumeration of other ports.</p>
-<p>![[Screenshot 2024-08-02 112611.png]]</p>
+<p><img src="/spray.png" alt="spray"></p>
 <ul>
 <li>
 <p>Port 389/3268: There&rsquo;s not much LDAP would provide that we haven&rsquo;t already gained from rid-brute. a tool like windapsearch is mostly useful for enumerating users, groups, computers, or privileged users which we already have or will get from our next phase of weaponization.</p>
@@ -195,32 +195,32 @@ Host script results:
 <p>Port 3389: We have creds we can test with RDP for svc_sspr, let see if the user is allowed to remote into the machine</p>
 </li>
 </ul>
-<p>![[Pasted image 20240831195929.png]]</p>
+<p><img src="/svcrm.png" alt="WinRM"></p>
 <p>Indeed we can, and this gets us our user flag. Considering we can remote into the machine, we can also run bloodhound to enumerate the environment further. Considering we enumerated to gain credentials, which we are using to find an attack path, this constitutes our second phase, weaponization.</p>
 <h1 id="weaponization-">Weaponization ⚔️</h1>
 <p>Lets run bloodhound on the environment and see if we can find an attack path.</p>
-<p>![[Screenshot 2024-08-02 135659.png]]</p>
-<p>![[Pasted image 20240831202717.png]]
-![[Pasted image 20240831211630.png]]</p>
+<p><img src="/collection.png" alt="WinRM"></p>
+<p><img src="/bloodhound1.png" alt="Bloodhound">
+<img src="/bloodhound2.png" alt="Bloodhound2"></p>
 <p>According to bloodhound, svc_sspr has first degree object control over three users which allows the service account to change their password. All users seem to be apart of the ICT Security group, lets go check what special permissions members of this group may have.</p>
-<p>![[Pasted image 20240831211838.png]]</p>
-<p>![[Pasted image 20240831211933.png]]</p>
+<p><img src="/bloodhound3.png" alt="Bloodhound3"></p>
+<p><img src="/bloodhound4.png" alt="Bloodhound4"></p>
 <p>Members of the ICT Security group are allowed to modify the permissions of msDS-AllowedToActOnBehalfOfOtherIdentity on a machine account. Modifying this permission allows a machine account or user, to act on behalf of another machine account. Ultimately, we could request kerberos tickets for the machine account, impersonating the Administrator and gaining their credentials. The act of this is called resource based constrained delegation, or RBCD.</p>
 <p>Given the help provided from bloodhound and some research, lets see if we can escalate privileges by changing the password of a member in the ICT Security group, use one of their accounts to create another machine account which we can use during the RBCD attack</p>
 <h1 id="delivery-">Delivery 📬</h1>
 <p>Lets start with changing the password of <code>crose</code> and checking the MachineAccountQuota (MAQ) attribute of the account, which allows shows how many machine accounts a user can create and by default should be set to ten.</p>
-<p>![[Pasted image 20240901111557.png]]</p>
+<p><img src="/changepsswd.png" alt="MAQ"></p>
 <p>We have successfully changed the password but since msDS-MachineAccountQuota is set to 0, we are unable to preform RBCD in the way we normally would. After googling &ldquo;rbcd with maq 0&rdquo; (i am the google czar), I was lead to this article from <a href="https://www.thehacker.recipes/ad/movement/kerberos/delegations/rbcd">The Hacker Recipes</a> which does a great job of breaking down how both RBCD and RBCD without being able to create machine accounts work.</p>
 <p>Here&rsquo;s a short breakdown.</p>
 <ol>
 <li>Change msDS-AllowedToActOnBehalfOfOtherIdentity property on <code>crose</code></li>
 </ol>
-<p>![[Pasted image 20240901175402.png]]</p>
+<p><img src="/rbcd1.png" alt="RBCD1"></p>
 <ol start="2">
 <li>Request the user&rsquo;s TGT</li>
 </ol>
-<p>![[Pasted image 20240901125855.png]]
-![[Pasted image 20240901125920.png]]</p>
+<p><img src="/rbcd2.png" alt="RBCD2">
+<img src="/rbcd3.png" alt="RBCD3"></p>
 <ol start="3">
 <li>Change the users hash to the session key
 <ol>
@@ -228,7 +228,7 @@ Host script results:
 </ol>
 </li>
 </ol>
-<p>![[Pasted image 20240901125752.png]]</p>
+<p><img src="/rbcd4.png" alt="RBCD4"></p>
 <ol start="4">
 <li>
 <p>Abuse S4U2Self</p>
@@ -246,10 +246,10 @@ Host script results:
 <p>Get ccache and dump secrets</p>
 </li>
 </ol>
-<p>![[Pasted image 20240901180739.png]]</p>
+<p><img src="/rbcd5.png" alt="RBCD5"></p>
 <ol start="7">
 <li>Profit $$$
-![[Pasted image 20240901182056.png]]</li>
+<img src="/root.png" alt="root"></li>
 </ol>
 
     </div>
