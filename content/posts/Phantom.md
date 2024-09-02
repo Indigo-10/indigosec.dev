@@ -115,8 +115,8 @@ After research, it looks like an .hc file should be opened with veracrypt, a fil
 
 To be completely honest, I did not make a custom wordlist, I guessed/bruteforced the password once learning the combination should be name + year + special character, which is honestly probably the case, or something similar, in most companies.
 
-![drive1](/drive1.png)
-![drive2](/drive2.png)
+![drive1](/Drive1.png)
+![drive2](/Drive2.png)
 ![foothold](/foothold.png)
 
 Within the encrypted drive, theres a VyOS backup archive, meant for a virtual router, which hosts its configuration file.  Within the config, there's a VPN profile meant for user lstanley, which provides a username and password. We can do what we did previously, by using our user list to spray creds against the given password, doing that gives us access to the svc_sspr user. This technically should be our foothold, we'll save these creds for later, lets continue with enumeration of other ports.
