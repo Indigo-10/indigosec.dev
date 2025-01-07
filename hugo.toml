@@ -6,7 +6,7 @@ theme = "m10c"
 
 [menu]
   [[menu.main]]
-    identifier = "/posts"
+    identifier = "posts"
     name = "Home"
     url = "/"
     weight = 1
