@@ -1,4 +1,19 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Vulnlab on indigo &lt;3</title><link>https://indigosec.dev/tags/vulnlab/</link><description>Recent content in Vulnlab on indigo &lt;3</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Sat, 31 Aug 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://indigosec.dev/tags/vulnlab/index.xml" rel="self" type="application/rss+xml"/><item><title>Vulnlab Walkthrough #1 - Phantom</title><link>https://indigosec.dev/posts/phantom/</link><pubDate>Sat, 31 Aug 2024 00:00:00 +0000</pubDate><guid>https://indigosec.dev/posts/phantom/</guid><description>High-level Overview 📜 Phantom is a medium rated Windows machine on Vulnlab. To gain access to the administrator credentials I leveraged null SMB authentication, RID-Cycling, and Resource Based Constrained Delegation with a user that had a MachineAccountQuota of 0.
-Reconnaissance 📡 My default Nmap scan returned the following results.
-Command:
-nmap -sVC -T4 -Pn 10.10.112.137 -oN phantom.txt -sVC: Returns version of serivces and runs default NSE script for additional service enmeration such as smb2-security-mode -T4: Allows for faster scannning.</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Vulnlab on indigo &lt;3</title>
+    <link>http://localhost:1313/tags/vulnlab/</link>
+    <description>Recent content in Vulnlab on indigo &lt;3</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 31 Aug 2024 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/vulnlab/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Vulnlab Walkthrough #1 - Phantom</title>
+      <link>http://localhost:1313/posts/vulnlab/phantom/</link>
+      <pubDate>Sat, 31 Aug 2024 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/posts/vulnlab/phantom/</guid>
+      <description>High-level Overview 📜 Phantom is a medium rated Windows machine on Vulnlab. To gain access to the administrator credentials I leveraged null SMB authentication, RID-Cycling, and Resource Based Constrained Delegation with a user that had a MachineAccountQuota of 0.&#xA;Reconnaissance 📡 My default Nmap scan returned the following results.&#xA;Command:&#xA;nmap -sVC -T4 -Pn 10.10.112.137 -oN phantom.txt -sVC: Returns version of serivces and runs default NSE script for additional service enmeration such as smb2-security-mode -T4: Allows for faster scannning.</description>
+    </item>
+  </channel>
+</rss>

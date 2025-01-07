@@ -1,18 +1,107 @@
-<!doctype html><html lang=en-us><head><title>Vulnlab Walkthrough #1 - Phantom // indigo &lt;3</title>
-<link rel="shortcut icon" href=/favicon.ico><meta charset=utf-8><meta name=generator content="Hugo 0.125.4"><meta name=viewport content="width=device-width,initial-scale=1"><meta name=author content="Jonathan Skeete"><meta name=description content><link rel=stylesheet href=/css/main.min.8fa8794eaa080447f11069bd7790a70b4cb8e223063082eca1a345934219eadf.css><meta name=twitter:card content="summary"><meta name=twitter:title content="Vulnlab Walkthrough #1 - Phantom"><meta name=twitter:description content="High-level Overview 📜 Phantom is a medium rated Windows machine on Vulnlab. To gain access to the administrator credentials I leveraged null SMB authentication, RID-Cycling, and Resource Based Constrained Delegation with a user that had a MachineAccountQuota of 0.
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <title>Vulnlab Walkthrough #1 - Phantom // indigo &lt;3</title>
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <meta charset="utf-8" />
+    <meta name="generator" content="Hugo 0.125.4">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="author" content="Jonathan Skeete" />
+    <meta name="description" content="" />
+    <link rel="stylesheet" href="/css/main.min.8fa8794eaa080447f11069bd7790a70b4cb8e223063082eca1a345934219eadf.css" />
+    
+
+    
+  
+
+
+    <meta name="twitter:card" content="summary"><meta name="twitter:title" content="Vulnlab Walkthrough #1 - Phantom">
+<meta name="twitter:description" content="High-level Overview 📜 Phantom is a medium rated Windows machine on Vulnlab. To gain access to the administrator credentials I leveraged null SMB authentication, RID-Cycling, and Resource Based Constrained Delegation with a user that had a MachineAccountQuota of 0.
 Reconnaissance 📡 My default Nmap scan returned the following results.
 Command:
-nmap -sVC -T4 -Pn 10.10.112.137 -oN phantom.txt -sVC: Returns version of serivces and runs default NSE script for additional service enmeration such as smb2-security-mode -T4: Allows for faster scannning."><meta property="og:url" content="https://indigosec.dev/posts/phantom/"><meta property="og:site_name" content="indigo <3"><meta property="og:title" content="Vulnlab Walkthrough #1 - Phantom"><meta property="og:description" content="High-level Overview 📜 Phantom is a medium rated Windows machine on Vulnlab. To gain access to the administrator credentials I leveraged null SMB authentication, RID-Cycling, and Resource Based Constrained Delegation with a user that had a MachineAccountQuota of 0.
+nmap -sVC -T4 -Pn 10.10.112.137 -oN phantom.txt -sVC: Returns version of serivces and runs default NSE script for additional service enmeration such as smb2-security-mode -T4: Allows for faster scannning.">
+
+    <meta property="og:url" content="https://indigosec.dev/posts/phantom/">
+  <meta property="og:site_name" content="indigo &lt;3">
+  <meta property="og:title" content="Vulnlab Walkthrough #1 - Phantom">
+  <meta property="og:description" content="High-level Overview 📜 Phantom is a medium rated Windows machine on Vulnlab. To gain access to the administrator credentials I leveraged null SMB authentication, RID-Cycling, and Resource Based Constrained Delegation with a user that had a MachineAccountQuota of 0.
 Reconnaissance 📡 My default Nmap scan returned the following results.
 Command:
-nmap -sVC -T4 -Pn 10.10.112.137 -oN phantom.txt -sVC: Returns version of serivces and runs default NSE script for additional service enmeration such as smb2-security-mode -T4: Allows for faster scannning."><meta property="og:locale" content="en-us"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2024-08-31T00:00:00+00:00"><meta property="article:modified_time" content="2024-08-31T00:00:00+00:00"><meta property="article:tag" content="Vulnlab"></head><body><header class=app-header><a href=https://indigosec.dev/><img class=app-header-avatar src=/avatar.jpg alt="Jonathan Skeete"></a>
-<span class=app-header-title>indigo &lt;3</span><nav class=app-header-menu><a class=app-header-menu-item href=/>Home</a>
--
-<a class=app-header-menu-item href=/about/>About</a></nav><p>Penn State University Red Team Captain</p><div class=app-header-social><a href=https://discord.com/users/xindigoo target=_blank rel="noreferrer noopener me"><svg viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-link"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-</a><a href=https://www.linkedin.com/in/jonathan-skeete-06b427256/ target=_blank rel="noreferrer noopener me"><svg viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-linkedin"><title>Linkedin</title><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a></div></header><main class=app-container><article class=post><header class=post-header><h1 class=post-title>Vulnlab Walkthrough #1 - Phantom</h1><div class=post-meta><div><svg viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-calendar"><title>calendar</title><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-Aug 31, 2024</div><div><svg viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-clock"><title>clock</title><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-7 min read</div><div><svg viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tag"><title>tag</title><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83.0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-<a class=tag href=https://indigosec.dev/tags/vulnlab/>Vulnlab</a></div></div></header><div class=post-content><h1 id=high-level-overview->High-level Overview 📜</h1><p>Phantom is a medium rated Windows machine on Vulnlab. To gain access to the administrator credentials I leveraged null SMB authentication, RID-Cycling, and Resource Based Constrained Delegation with a user that had a MachineAccountQuota of 0.</p><h1 id=reconnaissance->Reconnaissance 📡</h1><p>My default Nmap scan returned the following results.</p><p>Command:</p><pre tabindex=0><code> nmap -sVC -T4 -Pn 10.10.112.137 -oN phantom.txt
+nmap -sVC -T4 -Pn 10.10.112.137 -oN phantom.txt -sVC: Returns version of serivces and runs default NSE script for additional service enmeration such as smb2-security-mode -T4: Allows for faster scannning.">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2024-08-31T00:00:00+00:00">
+    <meta property="article:modified_time" content="2024-08-31T00:00:00+00:00">
+    <meta property="article:tag" content="Vulnlab">
+
+
+  </head>
+  <body>
+    <header class="app-header">
+      <a href="https://indigosec.dev/"><img class="app-header-avatar" src="/avatar.jpg" alt="Jonathan Skeete" /></a>
+      <span class="app-header-title">indigo &lt;3</span>
+      <nav class="app-header-menu">
+          <a class="app-header-menu-item" href="/">Home</a>
+             - 
+          
+          <a class="app-header-menu-item" href="/about/">About</a>
+      </nav>
+      <p>Penn State University Red Team Captain</p>
+      <div class="app-header-social">
+        
+          <a href="https://discord.com/users/xindigoo" target="_blank" rel="noreferrer noopener me">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-link">
+  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+</svg>
+          </a>
+        
+          <a href="https://www.linkedin.com/in/jonathan-skeete-06b427256/" target="_blank" rel="noreferrer noopener me">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-linkedin">
+  <title>Linkedin</title>
+  <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle>
+</svg>
+          </a>
+        
+      </div>
+    </header>
+    <main class="app-container">
+      
+  <article class="post">
+    <header class="post-header">
+      <h1 class ="post-title">Vulnlab Walkthrough #1 - Phantom</h1>
+      <div class="post-meta">
+        <div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-calendar">
+  <title>calendar</title>
+  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>
+</svg>
+          Aug 31, 2024
+        </div>
+        <div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-clock">
+  <title>clock</title>
+  <circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>
+</svg>
+          7 min read
+        </div>
+        <div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tag">
+  <title>tag</title>
+  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line>
+</svg>
+              <a class="tag" href="https://indigosec.dev/tags/vulnlab/">Vulnlab</a>
+        </div>
+      </div>
+    </header>
+    <div class="post-content">
+      <h1 id="high-level-overview-">High-level Overview 📜</h1>
+<p>Phantom is a medium rated Windows machine on Vulnlab. To gain access to the administrator credentials I leveraged null SMB authentication, RID-Cycling, and Resource Based Constrained Delegation with a user that had a MachineAccountQuota of 0.</p>
+<h1 id="reconnaissance-">Reconnaissance 📡</h1>
+<p>My default Nmap scan returned the following results.</p>
+<p>Command:</p>
+<pre tabindex="0"><code> nmap -sVC -T4 -Pn 10.10.112.137 -oN phantom.txt
 
 -sVC: Returns version of serivces and runs default NSE script for additional service enmeration such as smb2-security-mode
 
@@ -21,7 +110,8 @@ Aug 31, 2024</div><div><svg viewBox="0 0 24 24" fill="none" stroke="currentcolor
 -Pn: Disables host discovery, doesn&#39;t require machine to respond to a ping in order to find services.
 
 -oN: Normal output to text file.
-</code></pre><p>Response:</p><pre tabindex=0><code>Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-08-31 13:46 EDT
+</code></pre><p>Response:</p>
+<pre tabindex="0"><code>Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-08-31 13:46 EDT
 Nmap scan report for 10.10.112.137
 Host is up (0.14s latency).
 Not shown: 987 filtered tcp ports (no-response)
@@ -63,9 +153,111 @@ Host script results:
 |   3:1:1: 
 |_    Message signing enabled and required
 |_clock-skew: mean: 2s, deviation: 0s, median: 1s
-</code></pre><p>Due to the services listed, there seem to be few initial attack vectors. Here&rsquo;s my current thought process.</p><ul><li><p>Port 53: Me and my homies hate DNS exploitation, I believe the only attack I know is a zone transfer, which trying this early, would be a waste of time and possibly a rabbit hole.</p></li><li><p>Port 88: Kerberos is used for Authentication, not necessarily something I change around and exploit without access to security policies. However, what we can keep in mind are possible misconfigurations such as AESPRoasting and RID-Cycling.</p></li></ul><p><img src=/RID.png alt=RID-Cycling></p><p>RID-Cycling seems to have worked and provided, a userlist, we can use this userlist to try and AESPRoast as well as try to brute force passwords.</p><p><img src=/ASREP.png alt=AESPRoast></p><p>Unfortunately, AESPRoasting doesn&rsquo;t work due to UF_DONT_REQUIRE_PREAUTH not being enabled on user accounts, which would allow for me to grab the a Kerberos TGT for the account without requiring a password, which in turn would allow for me to crack the hash and obtain a password.</p><ul><li>Port 135/593: MSRPC is usually a dead end unless we have creds. Querying the endpoint shows a print system protocol is being used, potentially making it vulnerable to print nightmare. However further enumeration reveals nothing.</li></ul><p><img src=/MSRPC.png alt=MSRPC></p><ul><li>Port 139/445: Me and my homies love SMB. It&rsquo;s usually the most exploited service to gain initial access due to security misconfigurations and can usually be used in conjunction with other services for forced authentication</li></ul><p><img src=/SMB.png alt=SMBshares></p><p>As talked about, the file server allows us to authenticate with null credentials using the username Anonymous. This reveals a few network shares we can access access, most deny directory listings due to insufficient permissions; however the &ldquo;public&rdquo; network share holds a file called &ldquo;tech_support_email.eml&rdquo; which I downloaded to my local machine. Lets view its contents</p><p><img src=/Email.png alt=Email></p><p>This seems to be an onboarding message that provides initial creds, spraying that against the userlist we generated provides a hit for ibryant. Having these creds, lets see if we can access some of the shares previously inaccessible to us, more specifically, the &ldquo;Departments Share.&rdquo;</p><p><img src=/creds.png alt=creds></p><p><img src=/SMB2.png alt=smb2></p><p>ibryant does indeed have access to the &ldquo;Departments share&rdquo; which includes the IT, HR, and Finance departments, what interests us the most is the &ldquo;IT_BACKUP_201123.hc&rdquo; file under Departments share/IT.</p><p>After research, it looks like an .hc file should be opened with veracrypt, a file encryption/decryption service, this would require a password to decrypt the given file. In a easier scenario, the .hc file would be able to be cracked/decrypted using hashcat mode 13721; however, per the hint on vulnlab wiki, the hash for this file cannot be found on a regular wordlist like rockyou.txt and would take a custom wordlist.</p><p>To be completely honest, I did not make a custom wordlist, I guessed/bruteforced the password once learning the combination should be name + year + special character, which is honestly probably the case, or something similar, in most companies.</p><p><img src=/drive1.png alt=drive1>
-<img src=/drive2.png alt=drive2>
-<img src=/foothold.png alt=foothold></p><p>Within the encrypted drive, theres a VyOS backup archive, meant for a virtual router, which hosts its configuration file. Within the config, there&rsquo;s a VPN profile meant for user lstanley, which provides a username and password. We can do what we did previously, by using our user list to spray creds against the given password, doing that gives us access to the svc_sspr user. This technically should be our foothold, we&rsquo;ll save these creds for later, lets continue with enumeration of other ports.</p><p><img src=/spray.png alt=spray></p><ul><li><p>Port 389/3268: There&rsquo;s not much LDAP would provide that we haven&rsquo;t already gained from rid-brute. a tool like windapsearch is mostly useful for enumerating users, groups, computers, or privileged users which we already have or will get from our next phase of weaponization.</p></li><li><p>Port 3389: We have creds we can test with RDP for svc_sspr, let see if the user is allowed to remote into the machine</p></li></ul><p><img src=/svcrm.png alt=WinRM></p><p>Indeed we can, and this gets us our user flag. Considering we can remote into the machine, we can also run bloodhound to enumerate the environment further. Considering we enumerated to gain credentials, which we are using to find an attack path, this constitutes our second phase, weaponization.</p><h1 id=weaponization->Weaponization ⚔️</h1><p>Lets run bloodhound on the environment and see if we can find an attack path.</p><p><img src=/collection.png alt=WinRM></p><p><img src=/bloodhound1.png alt=Bloodhound>
-<img src=/bloodhound2.png alt=Bloodhound2></p><p>According to bloodhound, svc_sspr has first degree object control over three users which allows the service account to change their password. All users seem to be apart of the ICT Security group, lets go check what special permissions members of this group may have.</p><p><img src=/bloodhound3.png alt=Bloodhound3></p><p><img src=/bloodhound4.png alt=Bloodhound4></p><p>Members of the ICT Security group are allowed to modify the permissions of msDS-AllowedToActOnBehalfOfOtherIdentity on a machine account. Modifying this permission allows a machine account or user, to act on behalf of another machine account. Ultimately, we could request kerberos tickets for the machine account, impersonating the Administrator and gaining their credentials. The act of this is called resource based constrained delegation, or RBCD.</p><p>Given the help provided from bloodhound and some research, lets see if we can escalate privileges by changing the password of a member in the ICT Security group, use one of their accounts to create another machine account which we can use during the RBCD attack</p><h1 id=delivery->Delivery 📬</h1><p>Lets start with changing the password of <code>crose</code> and checking the MachineAccountQuota (MAQ) attribute of the account, which allows shows how many machine accounts a user can create and by default should be set to ten.</p><p><img src=/changepsswd.png alt=MAQ></p><p>We have successfully changed the password but since msDS-MachineAccountQuota is set to 0, we are unable to preform RBCD in the way we normally would. After googling &ldquo;rbcd with maq 0&rdquo; (i am the google czar), I was lead to this article from <a href=https://www.thehacker.recipes/ad/movement/kerberos/delegations/rbcd>The Hacker Recipes</a> which does a great job of breaking down how both RBCD and RBCD without being able to create machine accounts work.</p><p>Here&rsquo;s a short breakdown.</p><ol><li>Change msDS-AllowedToActOnBehalfOfOtherIdentity property on <code>crose</code></li></ol><p><img src=/rbcd1.png alt=RBCD1></p><ol start=2><li>Request the user&rsquo;s TGT</li></ol><p><img src=/rbcd2.png alt=RBCD2>
-<img src=/rbcd3.png alt=RBCD3></p><ol start=3><li>Change the users hash to the session key<ol><li>This allows the user to request tickets without the KDC denying the request</li></ol></li></ol><p><img src=/rbcd4.png alt=RBCD4></p><ol start=4><li><p>Abuse S4U2Self</p><ol><li>Service 4 User 2 Self allows <code>crose</code> to request a service ticket on behalf of the Administrator due to its msDS-AllowedToActOnBehalfOfOtherIdentity permissions over the machine and the fact that the KDC now allows <code>crose</code> to request tickets.</li></ol></li><li><p>Abuse U2U</p><ol><li>U2U will now allow <code>crose</code> which is impersonating <code>administrator</code> to request the admins encrypted TGT, which we can read, since we are indeed impersonating admin.</li></ol></li><li><p>Get ccache and dump secrets</p></li></ol><p><img src=/rbcd5.png alt=RBCD5></p><ol start=7><li>Profit $$$
-<img src=/root.png alt=root></li></ol></div><div class=post-footer></div></article></main></body></html>
+</code></pre><p>Due to the services listed, there seem to be few initial attack vectors. Here&rsquo;s my current thought process.</p>
+<ul>
+<li>
+<p>Port 53: Me and my homies hate DNS exploitation, I believe the only attack I know is a zone transfer, which trying this early, would be a waste of time and possibly a rabbit hole.</p>
+</li>
+<li>
+<p>Port 88: Kerberos is used for Authentication, not necessarily something I change around and exploit without access to security policies. However, what we can keep in mind are possible misconfigurations such as AESPRoasting and RID-Cycling.</p>
+</li>
+</ul>
+<p><img src="/RID.png" alt="RID-Cycling"></p>
+<p>RID-Cycling seems to have worked and provided, a userlist, we can use this userlist to try and AESPRoast as well as try to brute force passwords.</p>
+<p><img src="/ASREP.png" alt="AESPRoast"></p>
+<p>Unfortunately, AESPRoasting doesn&rsquo;t work due to UF_DONT_REQUIRE_PREAUTH not being enabled on user accounts, which would allow for me to grab the a Kerberos TGT  for the account without requiring a password, which in turn would allow for me to crack the hash and obtain a password.</p>
+<ul>
+<li>Port 135/593: MSRPC is usually a dead end unless we have creds. Querying the endpoint shows a print system protocol is being used, potentially making it vulnerable to print nightmare. However further enumeration reveals nothing.</li>
+</ul>
+<p><img src="/MSRPC.png" alt="MSRPC"></p>
+<ul>
+<li>Port 139/445: Me and my homies love SMB. It&rsquo;s usually the most exploited service to gain initial access due to security misconfigurations and can usually be used in conjunction with other services for forced authentication</li>
+</ul>
+<p><img src="/SMB.png" alt="SMBshares"></p>
+<p>As talked about, the file server allows us to authenticate with null credentials using the username Anonymous. This reveals a few network shares we can access access, most deny directory listings due to insufficient permissions; however the &ldquo;public&rdquo; network share holds a file called &ldquo;tech_support_email.eml&rdquo; which I downloaded to my local machine. Lets view its contents</p>
+<p><img src="/Email.png" alt="Email"></p>
+<p>This seems to be an onboarding message that provides initial creds, spraying that against the userlist we generated provides a hit for ibryant. Having these creds, lets see if we can access some of the shares previously inaccessible to us, more specifically, the &ldquo;Departments Share.&rdquo;</p>
+<p><img src="/creds.png" alt="creds"></p>
+<p><img src="/SMB2.png" alt="smb2"></p>
+<p>ibryant does indeed have access to the &ldquo;Departments share&rdquo; which includes the IT, HR, and Finance departments, what interests us the most is the &ldquo;IT_BACKUP_201123.hc&rdquo; file under Departments share/IT.</p>
+<p>After research, it looks like an .hc file should be opened with veracrypt, a file encryption/decryption service, this would require a password to decrypt the given file. In a easier scenario, the .hc file  would be able to be cracked/decrypted using hashcat mode 13721; however, per the hint on vulnlab wiki, the hash for this file cannot be found on a regular wordlist like rockyou.txt and would take a custom wordlist.</p>
+<p>To be completely honest, I did not make a custom wordlist, I guessed/bruteforced the password once learning the combination should be name + year + special character, which is honestly probably the case, or something similar, in most companies.</p>
+<p><img src="/Drive1.png" alt="drive1">
+<img src="/Drive2.png" alt="drive2">
+<img src="/foothold.png" alt="foothold"></p>
+<p>Within the encrypted drive, theres a VyOS backup archive, meant for a virtual router, which hosts its configuration file.  Within the config, there&rsquo;s a VPN profile meant for user lstanley, which provides a username and password. We can do what we did previously, by using our user list to spray creds against the given password, doing that gives us access to the svc_sspr user. This technically should be our foothold, we&rsquo;ll save these creds for later, lets continue with enumeration of other ports.</p>
+<p><img src="/spray.png" alt="spray"></p>
+<ul>
+<li>
+<p>Port 389/3268: There&rsquo;s not much LDAP would provide that we haven&rsquo;t already gained from rid-brute. a tool like windapsearch is mostly useful for enumerating users, groups, computers, or privileged users which we already have or will get from our next phase of weaponization.</p>
+</li>
+<li>
+<p>Port 3389: We have creds we can test with RDP for svc_sspr, let see if the user is allowed to remote into the machine</p>
+</li>
+</ul>
+<p><img src="/svcrm.png" alt="WinRM"></p>
+<p>Indeed we can, and this gets us our user flag. Considering we can remote into the machine, we can also run bloodhound to enumerate the environment further. Considering we enumerated to gain credentials, which we are using to find an attack path, this constitutes our second phase, weaponization.</p>
+<h1 id="weaponization-">Weaponization ⚔️</h1>
+<p>Lets run bloodhound on the environment and see if we can find an attack path.</p>
+<p><img src="/collection.png" alt="WinRM"></p>
+<p><img src="/bloodhound1.png" alt="Bloodhound">
+<img src="/bloodhound2.png" alt="Bloodhound2"></p>
+<p>According to bloodhound, svc_sspr has first degree object control over three users which allows the service account to change their password. All users seem to be apart of the ICT Security group, lets go check what special permissions members of this group may have.</p>
+<p><img src="/bloodhound3.png" alt="Bloodhound3"></p>
+<p><img src="/bloodhound4.png" alt="Bloodhound4"></p>
+<p>Members of the ICT Security group are allowed to modify the permissions of msDS-AllowedToActOnBehalfOfOtherIdentity on a machine account. Modifying this permission allows a machine account or user, to act on behalf of another machine account. Ultimately, we could request kerberos tickets for the machine account, impersonating the Administrator and gaining their credentials. The act of this is called resource based constrained delegation, or RBCD.</p>
+<p>Given the help provided from bloodhound and some research, lets see if we can escalate privileges by changing the password of a member in the ICT Security group, use one of their accounts to create another machine account which we can use during the RBCD attack</p>
+<h1 id="delivery-">Delivery 📬</h1>
+<p>Lets start with changing the password of <code>crose</code> and checking the MachineAccountQuota (MAQ) attribute of the account, which allows shows how many machine accounts a user can create and by default should be set to ten.</p>
+<p><img src="/changepsswd.png" alt="MAQ"></p>
+<p>We have successfully changed the password but since msDS-MachineAccountQuota is set to 0, we are unable to preform RBCD in the way we normally would. After googling &ldquo;rbcd with maq 0&rdquo; (i am the google czar), I was lead to this article from <a href="https://www.thehacker.recipes/ad/movement/kerberos/delegations/rbcd">The Hacker Recipes</a> which does a great job of breaking down how both RBCD and RBCD without being able to create machine accounts work.</p>
+<p>Here&rsquo;s a short breakdown.</p>
+<ol>
+<li>Change msDS-AllowedToActOnBehalfOfOtherIdentity property on <code>crose</code></li>
+</ol>
+<p><img src="/rbcd1.png" alt="RBCD1"></p>
+<ol start="2">
+<li>Request the user&rsquo;s TGT</li>
+</ol>
+<p><img src="/rbcd2.png" alt="RBCD2">
+<img src="/rbcd3.png" alt="RBCD3"></p>
+<ol start="3">
+<li>Change the users hash to the session key
+<ol>
+<li>This allows the user to request tickets without the KDC denying the request</li>
+</ol>
+</li>
+</ol>
+<p><img src="/rbcd4.png" alt="RBCD4"></p>
+<ol start="4">
+<li>
+<p>Abuse S4U2Self</p>
+<ol>
+<li>Service 4 User 2 Self allows <code>crose</code> to request a service ticket on behalf of the Administrator due to its msDS-AllowedToActOnBehalfOfOtherIdentity permissions over the machine and the fact that the KDC now allows <code>crose</code> to request tickets.</li>
+</ol>
+</li>
+<li>
+<p>Abuse U2U</p>
+<ol>
+<li>U2U will now allow  <code>crose</code> which is impersonating <code>administrator</code> to request the admins encrypted TGT, which we can read, since we are indeed impersonating admin.</li>
+</ol>
+</li>
+<li>
+<p>Get ccache and dump secrets</p>
+</li>
+</ol>
+<p><img src="/rbcd5.png" alt="RBCD5"></p>
+<ol start="7">
+<li>Profit $$$
+<img src="/root.png" alt="root"></li>
+</ol>
+
+    </div>
+    <div class="post-footer">
+      
+    </div>
+  </article>
+
+    </main>
+  </body>
+</html>

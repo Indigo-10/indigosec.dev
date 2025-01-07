@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Sliver on indigo &lt;3</title>
+    <link>http://localhost:1313/tags/sliver/</link>
+    <description>Recent content in Sliver on indigo &lt;3</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 06 Jan 2025 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/sliver/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Evading Anti-Virus With Sliver C2 AES Encryption and Compression Process Injection - Malware Development #1</title>
+      <link>http://localhost:1313/posts/maldev/sliver-compression-and-encryption/</link>
+      <pubDate>Mon, 06 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/posts/maldev/sliver-compression-and-encryption/</guid>
+      <description>Background This upcoming spring semester me and a few team members are competing in the Information Security Talent Search (ISTS) Competition hosted by the Rochester Institute of Technology. It is a three-day attack and defend competition, where teams compete in a King of the Hill style challenge by hacking and defending against other teams to keep their critical services such as HTTP, SMTP, and SNMP up for points.&#xA;The competition rules strictly prohibit the use of any anti-virus applications, but as a red-teamer, that doesn&amp;rsquo;t mean you start being noisy and dropping files to disk.</description>
+    </item>
+  </channel>
+</rss>
